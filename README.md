@@ -130,3 +130,60 @@ We evaluate representative ASR models across all noise levels to provide a basel
 git clone [https://github.com/ttoyekk1a/SQuTR-Spoken-Query-to-Text-Retrieval.git](https://github.com/ttoyekk1a/SQuTR-Spoken-Query-to-Text-Retrieval.git)
 cd SQuTR
 pip install -r requirements.txt
+```
+
+## 📖 How to Use
+
+### ASR Processing
+
+To run ASR models on audio queries, use the scripts in `src/asr/`:
+
+```bash
+cd src/asr
+bash run_asr.sh
+```
+
+Example for running Whisper-Large-V3:
+```bash
+python whisper.py \
+    --input_folder /path/to/dataset \
+    --output_json /path/to/output/asr_result.jsonl \
+    --input_json_path queries_with_audio.jsonl \
+    --audio_base_path audios_clean \
+    --model_path openai/whisper-large-v3 \
+    --batch_size 16 \
+    --num_workers 16 \
+    --language_token "<|en|>" \
+    --metric wer
+```
+
+### Dense Retrieval
+
+To evaluate embedding-based retrieval models:
+
+```bash
+cd src/retrieval
+bash run_dense.sh
+```
+
+### Lexical Retrieval (BM25)
+
+To evaluate BM25-based retrieval:
+
+```bash
+cd src/retrieval
+bash run_bm25.sh
+```
+
+### Evaluation
+
+After obtaining ASR and retrieval results, evaluate performance using the evaluation scripts in `src/eval/` to compute nDCG@10, MRR@10, and error metrics.
+
+### Data Format
+
+SQuTR follows MTEB-compatible JSON format for queries:
+```json
+{"qid": "query_id", "text": "query_text", "audio_file": "audio.wav"}
+```
+
+---

@@ -1,0 +1,10 @@
+mteb==2.7.13
+sentence-transformers==4.1.0
+transformers==4.51.3
+vllm==0.8.4
+bm25s==0.2.2
+WeTextProcessing==1.0.4.1
+librosa==0.11.0
+jiwer
+modelscope[audio]
+torch==2.5.1
