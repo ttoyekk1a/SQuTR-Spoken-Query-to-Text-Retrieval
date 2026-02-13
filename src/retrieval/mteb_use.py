@@ -25,7 +25,7 @@ class CustomRetrieval(AbsTaskRetrieval):
     Metadata is required for MTEB registration.
     """
     metadata = TaskMetadata(
-        name="CustomStellaEval",
+        name="CustomEval",
         description="Evaluation on custom local dataset",
         reference=None,
         type="Retrieval",
@@ -100,7 +100,7 @@ class CustomRetrieval(AbsTaskRetrieval):
 # 3. Main Execution
 # ============================
 def main():
-    parser = argparse.ArgumentParser(description="Stella Embedding MTEB Evaluation")
+    parser = argparse.ArgumentParser(description="Embedding MTEB Evaluation")
     
     # Path Arguments
     parser.add_argument("--query_path", type=str, required=True, help="Path to queries.jsonl")
@@ -114,9 +114,8 @@ def main():
     parser.add_argument("--batch_size", type=int, default=8, help="Inference batch size")
     parser.add_argument("--max_length", type=int, default=4096, help="Max sequence length")
     
-    # Prompt Configuration (Stella often requires s2p_query for retrieval)
     parser.add_argument("--instruction", type=str, 
-                        default="s2p_query",
+                        default="",
                         help="Prompt prefix for queries. Set to empty string if not needed.")
 
     args = parser.parse_args()
@@ -145,13 +144,19 @@ def main():
         "torch_dtype": torch.float16,
         "attn_implementation": "flash_attention_2"
     }
-
-    model = SentenceTransformer(
-        args.model_path, 
-        trust_remote_code=True,
-        model_kwargs=model_kwargs,
-        prompts=model_prompts
-    )
+    if args.instruction:
+        model = SentenceTransformer(
+            args.model_path, 
+            trust_remote_code=True,
+            model_kwargs=model_kwargs,
+            prompts=model_prompts
+        )
+    else:
+        model = SentenceTransformer(
+            args.model_path, 
+            trust_remote_code=True,
+            model_kwargs=model_kwargs
+        )
 
     # Sanity Check
     docs = ["Hello world", "Who are you?"]

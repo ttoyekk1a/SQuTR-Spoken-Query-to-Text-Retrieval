@@ -8,3 +8,6 @@ librosa==0.11.0
 jiwer
 modelscope[audio]
 torch==2.5.1
+jieba
+qwen_omni_utils
+qwen-asr

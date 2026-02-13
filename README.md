@@ -1,22 +1,33 @@
 # SQuTR: A Robustness Benchmark for Spoken Query to Text Retrieval
 
-[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://github.com/ttoyekk1a/SQuTR-Spoken-Query-to-Text-Retrieval)
-[![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://github.com/ttoyekk1a/SQuTR-Spoken-Query-to-Text-Retrieval)
+[![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/SLLMCommunity/SQuTR)
 [![License: Code](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![License: Data](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-**SQuTR** (Spoken Query-to-Text Retrieval) is a large-scale bilingual benchmark designed to evaluate the robustness of information retrieval systems under realistic acoustic perturbations. 
+**SQuTR** (Spoken Query-to-Text Retrieval) is a large-scale bilingual benchmark designed to evaluate the robustness of information retrieval (IR) systems under realistic and complex acoustic perturbations.
 
-While speech interaction is becoming a primary interface for IR systems, performance often degrades significantly in noisy environments. SQuTR provides a standardized framework featuring **37,317** complex queries across **6 domains**, synthesized with **200 real speakers**, and evaluated under **4 graded noise levels**.
+While speech has become a primary interface for IR, performance often degrades significantly in noisy environments. SQuTR addresses this by extending 6 popular text retrieval datasets into the spoken domain, providing **37,317** complex queries across **6 domains**, synthesized with **200 real speakers**, and evaluated under **4 graded noise levels**.
 
 ---
 
 ## 🌟 Key Features
 
-* **Bilingual & Multi-Domain:** Includes 6 subsets from MTEB and C-MTEB covering Wikipedia, Finance, Medical, and Encyclopedia domains.
-* **High-Fidelity Synthesis:** Generated using **CosyVoice-3** with diverse speaker profiles, totaling **190.4 hours** of audio.
-* **Robustness Evaluation:** Explicitly models four acoustic conditions: **Clean, Low Noise (20dB), Medium Noise (10dB), and High Noise (0dB)**.
-* **MTEB Compatibility:** Follows standard JSONL/BEIR formatting for seamless integration into modern retrieval pipelines.
+* **Bilingual & Multi-Domain:** Includes 6 subsets from MTEB (English) and C-MTEB (Chinese) covering Wikipedia, Finance, Medical, and Encyclopedia domains.
+* **High-Fidelity Synthesis:** Generated using **CosyVoice-3** with voice profiles from 200 real speakers (diverse genders, ages, and accents), totaling **190.4 hours** of audio.
+* **Realistic Noise Modeling:** Features 17 categories of real-world environmental noise (e.g., transport, office, street) from DEMAND and NOISEX-92 datasets.
+* **Robustness Evaluation:** Models four acoustic conditions: **Clean, Low Noise (20dB), Medium Noise (10dB), and High Noise (0dB)**.
+* **Rigid Quality Control:** All samples undergo a three-stage verification process: automated filtering, ASR-based lexical consistency checks, and manual auditing by 10 bilingual annotators.
+
+---
+
+## 🛠 Dataset Generation Pipeline
+
+SQuTR utilizes a sophisticated pipeline to ensure high data quality and acoustic diversity:
+
+1.  **Text Processing:** Normalization of numbers, symbols, and abbreviations from the original MTEB/C-MTEB queries.
+2.  **Voice Synthesis:** Each query is synthesized into three candidate versions using different speaker profiles; the one with the lowest WER/CER (via Whisper/Paraformer) is selected to minimize synthesis artifacts.
+3.  **Acoustic Augmentation:** Noise is mixed based on RMS energy scaling to achieve precise Signal-to-Noise Ratio (SNR) levels.
+4.  **Verification:** Human-in-the-loop validation for naturalness, semantic consistency, and noise level accuracy.
 
 ---
 
@@ -181,7 +192,7 @@ We evaluate representative ASR models across all noise levels to provide a basel
 | **[Fun-ASR-Nano](https://huggingface.co/FunAudioLLM/Fun-ASR-Nano-2512)** | 3.08 | 3.23 | 3.47 | 6.72 |
 | **[GLM-ASR-Nano](https://huggingface.co/zai-org/GLM-ASR-Nano-2512)** | 4.77 | 4.73 | 5.08 | 11.44 |
 | **[SenseVoice-Small](https://huggingface.co/FunAudioLLM/SenseVoiceSmall)** | 5.32 | 6.22 | 6.44 | 11.99 |
-| **[Whisper-Large-V3](https://huggingface.co/openai/whisper-large-v3)** | 8.77 | 8.96 | 9.62 | 17.31 |
+|  **[Whisper-Large-V3](https://huggingface.co/openai/whisper-large-v3)** | 8.77 | 8.96 | 9.62 | 17.31 |
 
 ---
 
@@ -190,28 +201,62 @@ We evaluate representative ASR models across all noise levels to provide a basel
 ### 1. Setup
 ```bash
 git clone [https://github.com/ttoyekk1a/SQuTR-Spoken-Query-to-Text-Retrieval.git](https://github.com/ttoyekk1a/SQuTR-Spoken-Query-to-Text-Retrieval.git)
-cd SQuTR
+cd SQuTR-Spoken-Query-to-Text-Retrieval
 pip install -r requirements.txt
 ```
 
 ## 📖 How to Use
 
-### ASR Processing
 
-To run ASR models on audio queries, use the scripts in `src/asr/`:
+### End-to-End: Omni-Embedding
+
+This section demonstrates how to perform end-to-end audio retrieval using [NVIDIA Omni-Embedding (Nemotron-3B)](https://huggingface.co/nvidia/omni-embed-nemotron-3b).
+
+#### 1. Run End-to-End Retrieval Script
+
+You can run the following script (example: FiQA subset, audio_clean):
 
 ```bash
-cd src/asr
-bash run_asr.sh
+bash scripts/retrieval/run_omni_emb.sh
 ```
 
-Example for running Whisper-Large-V3:
+Or equivalently, run the following command directly:
+
 ```bash
-python whisper.py \
-    --input_folder /path/to/dataset \
-    --output_json /path/to/output/asr_result.jsonl \
+python3 src/retrieval/omni_emb.py \
+  --data_dir ./data/SQuTR/en/fiqa \
+  --log_path ./results/en/fiqa/nv-omni-embed_audio_clean \
+  --model_path nvidia/omni-embed-nemotron-3b \
+  --audio_path ./data/SQuTR/en/fiqa/audio_clean \
+  --query_file asr_result_cosy3.jsonl \
+  --batch_size 32 \
+  --query_field audio
+```
+
+The retrieval results will be saved in the `./results/en/fiqa/nv-omni-embed_audio_clean/` directory.
+
+### Cascade: Dense Retrieval
+
+#### Example: Whisper + BGE
+
+Below is a typical pipeline for evaluating retrieval on the `FiQA` subset (audio_clean) using `Whisper-Large-V3` for ASR and `BAAI/bge-base-en-v1.5` for dense retrieval.
+
+#### 1. Run Whisper ASR to transcribe audio queries
+
+You can use the provided script:
+
+```bash
+bash scripts/asr/run_whisper_large_v3.sh
+```
+
+Or equivalently, run the following command directly:
+
+```bash
+python scripts/asr/baselines/asr/whisper.py \
+    --input_folder ./data/SQuTR/en/fiqa \
+    --output_json ./data/SQuTR/en/fiqa/audio_clean/asr_result.jsonl \
     --input_json_path queries_with_audio.jsonl \
-    --audio_base_path audios_clean \
+    --audio_base_path audio_clean \
     --model_path openai/whisper-large-v3 \
     --batch_size 16 \
     --num_workers 16 \
@@ -219,33 +264,54 @@ python whisper.py \
     --metric wer
 ```
 
-### Dense Retrieval
+#### 2. Run dense retrieval evaluation with BGE
 
-To evaluate embedding-based retrieval models:
-
-```bash
-cd src/retrieval
-bash run_dense.sh
-```
-
-### Lexical Retrieval (BM25)
-
-To evaluate BM25-based retrieval:
+You can use the provided script:
 
 ```bash
-cd src/retrieval
-bash run_bm25.sh
+bash scripts/retrieval/run_mteb_dense.sh
 ```
 
-### Evaluation
+Or equivalently, run the following command directly:
 
-After obtaining ASR and retrieval results, evaluate performance using the evaluation scripts in `src/eval/` to compute nDCG@10, MRR@10, and error metrics.
-
-### Data Format
-
-SQuTR follows MTEB-compatible JSON format for queries:
-```json
-{"qid": "query_id", "text": "query_text", "audio_file": "audio.wav"}
+```bash
+python src/retrieval/mteb_use.py \
+  --corpus_path ./data/SQuTR/en/fiqa/corpus.jsonl \
+  --query_path ./data/SQuTR/en/fiqa/audio_clean/asr_result.jsonl \
+  --qrels_path ./data/SQuTR/en/fiqa/qrels/test.jsonl \
+  --model_path BAAI/bge-base-en-v1.5 \
+  --log_path ./results/en/fiqa/bge-base-en-v1.5_audio_clean \
+  --query_field asr_text \
+  --batch_size 32
 ```
 
----
+The final retrieval evaluation results will be saved in the `./results/en/fiqa/bge-base-en-v1.5_audio_clean/` directory.
+
+### Cascade: Lexical Retrieval
+
+#### Evaluation Example: BM25
+
+This section demonstrates how to evaluate lexical retrieval (BM25) on the FiQA subset (audio_clean) using ASR outputs.
+
+#### 1. Run BM25 retrieval evaluation
+
+You can use the provided script:
+
+```bash
+bash scripts/retrieval/run_bm25.sh
+```
+
+Or equivalently, run the following command directly:
+
+```bash
+python src/retrieval/bm25_en.py \
+  --data_dir ./data/SQuTR/en/fiqa \
+  --query_file whisper-large-v3-result.jsonl \
+  --log_path ./results/en/fiqa/bm25_audio_clean/bm25_full_metrics.log \
+  --audio_path ./data/SQuTR/en/fiqa/audio_clean \
+  --ndcg_k 10 20 100 \
+  --query_field asr_text
+```
+
+The BM25 evaluation results will be saved in the `./results/en/fiqa/bm25_audio_clean/` directory.
+
