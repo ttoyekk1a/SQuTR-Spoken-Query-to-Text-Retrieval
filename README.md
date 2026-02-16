@@ -1,6 +1,7 @@
 # SQuTR: A Robustness Benchmark for Spoken Query to Text Retrieval
 
 [![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/SLLMCommunity/SQuTR)
+[![Paper](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2602.12783)
 [![License: Code](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![License: Data](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
@@ -315,3 +316,17 @@ python src/retrieval/bm25_en.py \
 
 The BM25 evaluation results will be saved in the `./results/en/fiqa/bm25_audio_clean/` directory.
 
+## Citation
+If you find the **SQuTR** dataset or code useful in your research, we would greatly appreciate it if you could cite our paper:
+
+```
+@misc{li2026squtrrobustnessbenchmarkspoken,
+      title={SQuTR: A Robustness Benchmark for Spoken Query to Text Retrieval under Acoustic Noise}, 
+      author={Yuejie Li and Ke Yang and Yueying Hua and Berlin Chen and Jianhao Nie and Yueping He and Caixin Kang},
+      year={2026},
+      eprint={2602.12783},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2602.12783}, 
+}
+```
