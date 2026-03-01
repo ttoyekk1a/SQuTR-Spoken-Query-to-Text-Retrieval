@@ -293,7 +293,7 @@ python src/retrieval/mteb_use.py \
 
 The final retrieval evaluation results will be saved in the `./results/en/fiqa/bge-base-en-v1.5_audio_clean/` directory.
 
-#### 2. Run dense retrieval evaluation with Qwen3-Embedding
+#### 3. Run dense retrieval evaluation with Qwen3-Embedding
 
 You can use the provided script:
 
