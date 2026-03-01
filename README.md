@@ -11,6 +11,11 @@ While speech has become a primary interface for IR, performance often degrades s
 
 ---
 
+## 🏆 Recognition
+* **[2026-02]** SQuTR was featured as the **#1 Paper of the Day** on [Hugging Face Daily Papers](https://huggingface.co/papers/2602.12783)!
+
+---
+
 ## 🌟 Key Features
 
 * **Bilingual & Multi-Domain:** Includes 6 subsets from MTEB (English) and C-MTEB (Chinese) covering Wikipedia, Finance, Medical, and Encyclopedia domains.
