@@ -6,19 +6,20 @@ from typing import List, Optional, Union
 import numpy as np
 from tqdm import tqdm
 import asyncio
-from openai import AsyncOpenAI,OpenAI
+from openai import AsyncOpenAI, OpenAI
 from mteb import MTEB
 from mteb.abstasks.retrieval import AbsTaskRetrieval
 from mteb.abstasks.task_metadata import TaskMetadata
 from mteb.models.abs_encoder import AbsEncoder
 from transformers import AutoTokenizer
-# 设置日志格式
+
+# Set logging format
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- 配置区域 --- 
+# --- Configuration Area --- 
 
-# 执行前需要运行
+# Prerequisites: run the following before execution
 # sh scripts/retrieval/qwen3_embedding_0_6b.sh
 # sh scripts/retrieval/qwen3_embedding_4b.sh
 # sh scripts/retrieval/qwen3_embedding_8b.sh
@@ -37,20 +38,22 @@ MODEL_CONFIGS = {
     }
 }
 
-model_id = "./Qwen3-Embedding-0.6B"  # 或 HuggingFace ID，如 "qwen/Qwen-7B-Chat"
+model_id = "./Qwen3-Embedding-0.6B"  # Or HuggingFace ID, e.g., "qwen/Qwen-7B-Chat"
 tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
 
 def truncate_prompt(prompt, max_length=32000):
-    # 2. 将文本转为 Token ID
-    if len(prompt) < max_length: # 粗略估计，英文通常 1 token ≈ 4 chars，中文 ≈ 1-2 chars
+    # 1. Rough estimation: English is approx 1 token ≈ 4 chars, Chinese ≈ 1-2 chars
+    if len(prompt) < max_length: 
         return prompt
+    
+    # 2. Convert text to Token IDs
     tokens = tokenizer.encode(prompt)
     
-    # 3. 检查并截断
+    # 3. Check and truncate
     if len(tokens) > max_length:
-        # 保留最后 max_length 个 token (通常保留结尾更重要)
+        # Keep the first max_length tokens (or adjust to keep tail if preferred)
         truncated_tokens = tokens[:max_length]
-        # 解码回文本
+        # Decode back to text
         return tokenizer.decode(truncated_tokens, skip_special_tokens=True)
     return prompt
 
@@ -125,20 +128,22 @@ class CustomModel(AbsEncoder):
     ):
         show_progress_bar = kwargs.pop("show_progress_bar", True)
         texts = []
-        # if inputs and isinstance(inputs[0], dict):
+        # Process input batch
         for batch in inputs:
             if "text" in batch:
                 if isinstance(batch["text"], list):
                     texts.extend(batch["text"])
                 else:
                     texts.append(batch["text"])
+        
+        # Truncate if necessary
         texts = [truncate_prompt(t) for t in texts]
         return self._embed(texts, show_progress_bar=show_progress_bar)
 
 
 class CustomRetrieval(AbsTaskRetrieval):
     metadata = TaskMetadata(
-        name="DynamicPlaceHolder", # 这里的名字会在 __init__ 中被覆盖
+        name="DynamicPlaceHolder", # This name will be overwritten in __init__
         description="Evaluation on custom dataset",
         reference=None,
         type="Retrieval",
@@ -161,12 +166,12 @@ class CustomRetrieval(AbsTaskRetrieval):
     def __init__(self, data_dir, dataset_name, args, query_field="text", **kwargs):
         super().__init__(**kwargs)
         
-        # 动态修改任务名称，确保生成的 json 结果中 Task Name 正确
+        # Dynamically modify task name to ensure correct Task Name in JSON results
         self.metadata.name = dataset_name
         self.asr_result_file_name = args.asr_result_file_name
-        # data_dir = Path(data_dir)
+        
         parent = "/".join(data_dir.split("/")[:-1])
-        # 自动构建路径 
+        # Automatically build paths
         self.corpus_path = os.path.join(parent, "corpus.jsonl")
 
         self.query_path = os.path.join(data_dir, f"{self.asr_result_file_name}.jsonl")
@@ -176,7 +181,7 @@ class CustomRetrieval(AbsTaskRetrieval):
         self.qrels_path = os.path.join(parent, "qrels/test.jsonl")
         self.query_field = query_field
          
-        # 检查文件是否存在 
+        # Check if critical files exist
         for p in [self.corpus_path, self.query_path, self.qrels_path]:
             if not os.path.exists(p):
                 raise FileNotFoundError(f"Critical file not found: {p}")
@@ -206,7 +211,7 @@ class CustomRetrieval(AbsTaskRetrieval):
                 q_id = str(item.get("_id", item.get("id")))
                 query = item.get(self.query_field, "")
                 
-                # Qwen Prompt 模版
+                # Qwen Prompt Template
                 task_description = 'Given a web search query, retrieve relevant passages that answer the query'
                 prompt_template = f'Instruct: {task_description}\nQuery: {query}'
                 
@@ -231,11 +236,11 @@ class CustomRetrieval(AbsTaskRetrieval):
 def main():
     parser = argparse.ArgumentParser(description="Qwen3-Embedding MTEB Evaluation")
     
-    # 核心参数
+    # Core Parameters
     parser.add_argument(
         "--data_dir_path", 
         type=str, 
-        default="./Echo_Bench/en/fiqa/audio_noise_snr_0",
+        default="./data/Echo_Bench/en/fiqa/audio_noise_snr_0",
         help="Root directory of the dataset (containing corpus.jsonl, queries.jsonl, etc.)"
     )
     
@@ -247,7 +252,7 @@ def main():
         help="Choose the model size (0.6b, 4b, 8b)"
     )
     
-    # 可选配置 
+    # Optional Configuration 
     parser.add_argument("--log_path", type=str, default="./results_asr_ablation", help="Base directory to save MTEB results")
     parser.add_argument("--query_field", type=str, default="asr_text", help="Key name for query text in jsonl (default: text)")
     parser.add_argument("--batch_size", type=int, default=512, help="Inference batch size")
@@ -255,18 +260,17 @@ def main():
 
     args = parser.parse_args()
 
-    # 1. 验证模型
+    # 1. Validate Model Size
     if args.model_size not in MODEL_CONFIGS:
         raise ValueError(f"Invalid model size. Choices: {list(MODEL_CONFIGS.keys())}")
     
     selected_config = MODEL_CONFIGS[args.model_size]
     
-    # 2. 自动推断 Dataset Name 
-
+    # 2. Automatically derive Dataset Name 
     norm_path = os.path.normpath(args.data_dir_path)
-    dataset_name = norm_path.split("/")[-2] +"_"+ os.path.basename(norm_path)
+    dataset_name = norm_path.split("/")[-2] + "_" + os.path.basename(norm_path)
     
-    # 3. 构建结果路径: ./results/{dataset_name}/Qwen3-Embedding-{SIZE} 
+    # 3. Build output path: ./results/{dataset_name}/Qwen3-Embedding-{SIZE} 
     size_upper = args.model_size.upper() 
     formatted_model_name = f"Qwen3-Embedding-{size_upper}"
     final_output_folder = os.path.join(args.log_path, dataset_name, formatted_model_name, args.query_field, args.asr_result_file_name)
@@ -282,14 +286,14 @@ def main():
     logger.info("=" * 10)
     logger.info("=" * 50)
 
-    # 4. 初始化模型
+    # 4. Initialize Model
     model = CustomModel(
         model_name=selected_config['path'],
         base_url=selected_config['base_url'],
         max_batch_size=args.batch_size
     )
     
-    # 5. 初始化任务（传入文件夹路径即可）
+    # 5. Initialize Task
     task = CustomRetrieval(
         data_dir=args.data_dir_path,
         dataset_name=dataset_name,
@@ -297,7 +301,7 @@ def main():
         query_field=args.query_field,
     )
 
-    # 6. 运行
+    # 6. Run Evaluation
     evaluation = MTEB(tasks=[task])
     evaluation.run(
         model, 
