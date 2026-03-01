@@ -310,5 +310,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-给这个代码加上注释
