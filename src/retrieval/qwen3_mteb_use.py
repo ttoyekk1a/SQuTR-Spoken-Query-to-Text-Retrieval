@@ -256,7 +256,7 @@ def main():
     parser.add_argument("--log_path", type=str, default="./results_asr_ablation", help="Base directory to save MTEB results")
     parser.add_argument("--query_field", type=str, default="asr_text", help="Key name for query text in jsonl (default: text)")
     parser.add_argument("--batch_size", type=int, default=512, help="Inference batch size")
-    parser.add_argument("--asr_result_file_name", type=str, default="asr_result_cosy3_paraformer", help="")
+    parser.add_argument("--asr_result_file_name", type=str, default="asr_result", help="")
 
     args = parser.parse_args()
 

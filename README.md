@@ -293,6 +293,26 @@ python src/retrieval/mteb_use.py \
 
 The final retrieval evaluation results will be saved in the `./results/en/fiqa/bge-base-en-v1.5_audio_clean/` directory.
 
+#### 2. Run dense retrieval evaluation with Qwen3-Embedding
+
+You can use the provided script:
+
+```bash
+bash scripts/retrieval/run_mteb_qwen_embedding.sh
+```
+
+Or equivalently, run the following command directly:
+
+```bash
+python src/retrieval/qwen3_mteb_use.py \
+    --model_size 4b \
+    --data_dir_path "./Echo_Bench/en/fiqa/audio_noise_snr_10" \
+    --query_field "asr_text" \
+    --asr_result_file_name "asr_result" \
+    --batch_size 256 \
+    --log_path "./evaluation_results"
+```
+
 ### Cascade: Lexical Retrieval
 
 #### Evaluation Example: BM25
