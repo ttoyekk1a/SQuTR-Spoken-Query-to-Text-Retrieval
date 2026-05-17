@@ -1,5 +1,9 @@
 # SQuTR: A Robustness Benchmark for Spoken Query to Text Retrieval
+## 🏆 Recognition
+* **[2026-05]** SQuTR was accepted to **SIGIR 2026**!
+* **[2026-02]** SQuTR was featured as the **#1 Paper of the Day** on [Hugging Face Daily Papers](https://huggingface.co/papers/2602.12783)!
 
+---
 [![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/SLLMCommunity/SQuTR)
 [![Paper](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2602.12783)
 [![License: Code](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -8,11 +12,6 @@
 **SQuTR** (Spoken Query-to-Text Retrieval) is a large-scale bilingual benchmark designed to evaluate the robustness of information retrieval (IR) systems under realistic and complex acoustic perturbations.
 
 While speech has become a primary interface for IR, performance often degrades significantly in noisy environments. SQuTR addresses this by extending 6 popular text retrieval datasets into the spoken domain, providing **37,317** complex queries across **6 domains**, synthesized with **200 real speakers**, and evaluated under **4 graded noise levels**.
-
----
-
-## 🏆 Recognition
-* **[2026-02]** SQuTR was featured as the **#1 Paper of the Day** on [Hugging Face Daily Papers](https://huggingface.co/papers/2602.12783)!
 
 ---
 
